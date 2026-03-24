@@ -1,0 +1,110 @@
+#include <stdio.h>
+
+#define MEM_SIZE 32
+#define STACK_SIZE 32
+
+int memory[MEM_SIZE];
+int stack[STACK_SIZE];
+
+int SP = -1;  
+int PC = 0;   
+int running = 1;
+
+
+void push(int value) {
+    if (SP < STACK_SIZE - 1) {
+        stack[++SP] = value;
+    }
+}
+
+
+int pop() {
+    if (SP >= 0) {
+        return stack[SP--];
+    }
+    return 0;
+}
+
+
+void execute(int instruction) {
+    int opcode = instruction >> 5;
+    int operand = instruction & 31;
+
+    switch(opcode) {
+
+        case 0: // NOP
+            break;
+
+        case 1: // PUSH
+            push(operand);
+            break;
+
+        case 2: // POP
+            pop();
+            break;
+
+        case 3: // ADD
+            if (SP >= 0 && operand <= SP) {
+                stack[SP] += stack[operand];
+            }
+            break;
+
+        case 4: // SUB
+            if (SP >= 0 && operand <= SP) {
+                stack[SP] -= stack[operand];
+            }
+            break;
+
+        case 5: // JZ
+            if (SP >= 0 && stack[SP] == 0) {
+                PC = operand;
+                return;
+            }
+            break;
+
+        case 6: // JMP
+            PC = operand;
+            return;
+
+        case 7: // SWAP
+            if (SP >= 0 && operand <= SP) {
+                int temp = stack[SP];
+                stack[SP] = stack[operand];
+                stack[operand] = temp;
+            }
+            break;
+    }
+
+    PC++;
+}
+
+int main() {
+    int n;
+
+    printf("Enter number of instructions: ");
+    scanf("%d", &n);
+
+    printf("Enter instructions (opcode operand):\n");
+
+    for (int i = 0; i < n; i++) {
+        int opcode, operand;
+        scanf("%d %d", &opcode, &operand);
+        memory[i] = (opcode << 5) | operand;
+    }
+
+    while (running && PC < n) {
+        execute(memory[PC]);
+    }
+
+    printf("Final Stack:\n");
+    if (SP == -1) {
+        printf("Stack is empty\n");
+    } else {
+        for (int i = 0; i <= SP; i++) {
+            printf("%d ", stack[i]);
+        }
+        printf("\n");
+    }
+
+    return 0;
+}
